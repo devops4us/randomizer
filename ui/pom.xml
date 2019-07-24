@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ibm.demo</groupId>
+		<artifactId>randomizer</artifactId>
+		<version>PROJ_VERSION</version>
+	</parent>
+	<artifactId>randomizer-ui</artifactId>
+	<packaging>war</packaging>
+
+	<properties>
+		<vaadin.version>13.0.11</vaadin.version>
+	</properties>
+
+	<pluginRepositories>
+		<!-- Repository needed for prerelease versions of Vaadin -->
+		<pluginRepository>
+			<id>vaadin-prereleases</id>
+			<url>https://maven.vaadin.com/vaadin-prereleases</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<repositories>
+		<!-- Repository needed for prerelease versions of Vaadin -->
+		<repository>
+			<id>vaadin-prereleases</id>
+			<url>https://maven.vaadin.com/vaadin-prereleases</url>
+		</repository>
+		<!-- Repository used by many Vaadin add-ons -->
+		<repository>
+			<id>Vaadin Directory</id>
+			<url>http://maven.vaadin.com/vaadin-addons</url>
+		</repository>
+	</repositories>
+
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-bom</artifactId>
+				<version>${vaadin.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-cdi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.konghq</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>2.3.10</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+			<plugins>
+			      <plugin>
+	          <groupId>org.apache.tomee.maven</groupId>
+	          <artifactId>tomee-maven-plugin</artifactId>
+	          <version>${tomee.version}</version>
+	          <configuration>
+	              <tomeeClassifier>webprofile</tomeeClassifier>
+	              <context>randomizer-ui</context>
+	          </configuration>
+	      </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>				
+				<executions>
+					<execution>
+						<id>package</id>
+						<phase>package</phase>
+						<configuration>
+							<target>
+								<echo message="about to copy war file ..." />
+								<copy file="target/randomizer-ui-PROJ_VERSION.war"
+									tofile="../Docker/ui/randomizer-ui.war" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>				
+					<execution>
+						<id>pre-integration-test</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<echo message="about to run docker-compose build ..." />
+								<exec executable="docker-compose" dir="../Docker">
+									<arg value="build" />
+								</exec>
+								<echo message="about to run docker-compose up ..." />
+								<exec executable="docker-compose" dir="../Docker">
+									<arg value="up" />
+									<arg value="-d"/>
+								</exec>
+							</target>
+						</configuration>
+					</execution>
+					<execution>
+						<id>post-integration-test</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<echo message="about to run docker-compose down ..." />
+								<exec executable="docker-compose" dir="../Docker">
+									<arg value="down" />
+								</exec>
+							</target>
+						</configuration>
+					</execution>
+
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.0.0-M3</version>
+				<executions>
+					<execution>
+						<configuration>
+							<systemPropertyVariables>
+                    			<RANDOMIZER_UI_NAME>${RANDOMIZER_UI_NAME}</RANDOMIZER_UI_NAME>
+                    			<RANDOMIZER_UI_PORT>${RANDOMIZER_UI_PORT}</RANDOMIZER_UI_PORT>
+                			</systemPropertyVariables>
+						</configuration>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

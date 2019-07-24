@@ -1,0 +1,1 @@
+mvn tomee:run -Dtomee-plugin.http=8090

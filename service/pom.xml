@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <parent>
+		<groupId>com.ibm.demo</groupId>
+		<artifactId>randomizer</artifactId>
+		<version>PROJ_VERSION</version>
+   </parent>
+   <artifactId>randomizer-service</artifactId>
+   <packaging>war</packaging>
+   
+   <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <configuration>
+              <target unless="maven.test.skip">
+                <copy file="target/randomizer-service-PROJ_VERSION.war" tofile="../Docker/service/randomizer-service.war"/>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      
+      <plugin>
+          <groupId>org.apache.tomee.maven</groupId>
+          <artifactId>tomee-maven-plugin</artifactId>
+          <version>${tomee.version}</version>
+          <configuration>
+              <tomeeClassifier>webprofile</tomeeClassifier>
+              <context>randomizer-service</context>
+          </configuration>
+      </plugin>
+     
+    </plugins>
+   </build>
+</project>
