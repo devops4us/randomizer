@@ -21,10 +21,11 @@ To run the containers, type:
 ### End User Test	
 To test the rest service, open your browser on the docker host with `http://10.0.75.1:8080/randomizer-service/random` . To see the user interface, open your browser on docker host with `http://10.0.75.1:8090/randomizer-ui`. 
 
-### Automated Integration Test
-The following command line will package the applications, build and deploy docker images, run integration tests and finally stop the 
-docker containers.
+### Local Integration Test
+The following command lines will package the applications, build and deploy docker images, and run 
+the containers
 
 	mvn -DRANDOMIZER_UI_NAME=10.0.75.1 -DRANDOMIZER_UI_PORT=8090 verify
  
- 
+### Build on Jenkins
+The Jenkins Build will create containers, run integration tests, and finally archive the containers in a registry for deployment.
