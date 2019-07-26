@@ -3,7 +3,7 @@ services:
    randomizer-service:
       hostname: randomizer-service
       image: tomee
-      build: .\service 
+      build: ./service 
       image: randomizer-service
       volumes:
          - c:\volumeshare\randomizer:/volumeshare
@@ -14,7 +14,7 @@ services:
    randomizer-ui:
       hostname: randomizer-ui
       image: tomee
-      build: .\ui
+      build: ./ui
       image: randomizer-ui
       volumes:
          - c:\volumeshare\randomizer:/volumeshare
