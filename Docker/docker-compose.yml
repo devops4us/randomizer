@@ -4,9 +4,7 @@ services:
       hostname: randomizer-service
       image: tomee
       build: ./service 
-      image: randomizer-service
-      volumes:
-         - c:\volumeshare\randomizer:/volumeshare
+      image: randomizer-service      
       ports:
       - "8080:8080"
       networks:
@@ -16,8 +14,6 @@ services:
       image: tomee
       build: ./ui
       image: randomizer-ui
-      volumes:
-         - c:\volumeshare\randomizer:/volumeshare
       ports:
       - "8090:8080"
       networks:
