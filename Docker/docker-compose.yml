@@ -22,4 +22,4 @@ services:
       - RANDOMIZER_SERVER_NAME=randomizer-service
       - RANDOMIZER_SERVER_PORT=9090
 networks:
-   - host
+   host:
