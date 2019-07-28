@@ -36,7 +36,6 @@
 		</repository>
 	</repositories>
 
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -64,95 +63,111 @@
 			<version>2.3.10</version>
 		</dependency>
 	</dependencies>
-
-	<build>
+	<profiles>
+		<profile>
+			<activation>
+				<property>
+					<name>PROFILE</name>
+					<value>integration</value>
+				</property>
+			</activation>
+			<id>integration</id>
+			<build>
 			<plugins>
-			      <plugin>
-	          <groupId>org.apache.tomee.maven</groupId>
-	          <artifactId>tomee-maven-plugin</artifactId>
-	          <version>${tomee.version}</version>
-	          <configuration>
-	              <tomeeClassifier>webprofile</tomeeClassifier>
-	              <context>randomizer-ui</context>
-	          </configuration>
-	      </plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.8</version>				
-				<executions>
-					<execution>
-						<id>package</id>
-						<phase>package</phase>
-						<configuration>
-							<target>
-								<echo message="about to copy war file ..." />
-								<copy file="target/randomizer-ui-PROJ_VERSION.war"
-									tofile="../Docker/ui/randomizer-ui.war" />
-							</target>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>				
-					<execution>
-						<id>pre-integration-test</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target>
-								<echo message="about to run docker-compose build ..." />
-								<exec executable="docker-compose" dir="../Docker">
-									<arg value="build" />
-								</exec>
-								<echo message="about to run docker-compose up ..." />
-								<exec executable="docker-compose" dir="../Docker">
-									<arg value="up" />
-									<arg value="-d"/>
-								</exec>
-							</target>
-						</configuration>
-					</execution>
-					<execution>
-						<id>post-integration-test</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target>
-								<echo message="about to run docker-compose down ..." />
-								<exec executable="docker-compose" dir="../Docker">
-									<arg value="down" />
-								</exec>
-							</target>
-						</configuration>
-					</execution>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<version>1.8</version>
+					<executions>
+						<execution>
+							<id>package</id>
+							<phase>package</phase>
+							<configuration>
+								<target>
+									<echo message="about to copy war file ..." />
+									<copy file="target/randomizer-ui-PROJ_VERSION.war"
+										tofile="../Docker/ui/randomizer-ui.war" />
+								</target>
+							</configuration>
+							<goals>
+								<goal>run</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>pre-integration-test</id>
+							<phase>pre-integration-test</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+									<echo message="about to run docker-compose build ..." />
+									<exec executable="docker-compose" dir="../Docker">
+										<arg value="build" />
+									</exec>
+									<echo message="about to run docker-compose up ..." />
+									<exec executable="docker-compose" dir="../Docker">
+										<arg value="up" />
+										<arg value="-d" />
+									</exec>
+								</target>
+							</configuration>
+						</execution>
+						<execution>
+							<id>post-integration-test</id>
+							<phase>post-integration-test</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+									<echo message="about to run docker-compose down ..." />
+									<exec executable="docker-compose" dir="../Docker">
+										<arg value="down" />
+									</exec>
+								</target>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
 
-				</executions>
-			</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>3.0.0-M3</version>
+					<executions>
+						<execution>
+							<configuration>
+								<systemPropertyVariables>
+									<RANDOMIZER_UI_NAME>${RANDOMIZER_UI_NAME}</RANDOMIZER_UI_NAME>
+									<RANDOMIZER_UI_PORT>${RANDOMIZER_UI_PORT}</RANDOMIZER_UI_PORT>
+								</systemPropertyVariables>
+							</configuration>
+							<goals>
+								<goal>integration-test</goal>
+								<goal>verify</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
 
+			</plugins>
+			</build>
+		</profile>
+	</profiles>
+	
+	<build>
+		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>3.0.0-M3</version>
-				<executions>
-					<execution>
-						<configuration>
-							<systemPropertyVariables>
-                    			<RANDOMIZER_UI_NAME>${RANDOMIZER_UI_NAME}</RANDOMIZER_UI_NAME>
-                    			<RANDOMIZER_UI_PORT>${RANDOMIZER_UI_PORT}</RANDOMIZER_UI_PORT>
-                			</systemPropertyVariables>
-						</configuration>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-					</execution>
-				</executions>
+				<groupId>org.apache.tomee.maven</groupId>
+				<artifactId>tomee-maven-plugin</artifactId>
+				<version>${tomee.version}</version>
+				<configuration>
+					<tomeeClassifier>webprofile</tomeeClassifier>
+					<context>randomizer-ui</context>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
 </project>
