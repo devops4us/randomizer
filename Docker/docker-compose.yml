@@ -8,7 +8,7 @@ services:
       ports:
       - "9080:8080"
       networks:
-      - host    
+      - integration_net    
    randomizer-ui:
       hostname: randomizer-ui
       image: tomee
@@ -17,9 +17,9 @@ services:
       ports:
       - "9090:8080"
       networks:
-      - host
+      - integration_net
       environment:
       - RANDOMIZER_SERVER_NAME=randomizer-service
       - RANDOMIZER_SERVER_PORT=8080
 networks:
-   host:
+   integration_net:
