@@ -9,7 +9,7 @@ import com.ibm.demo.random.RandomizerBean;
 public class RandomizerTest {
 
 	@Test
-	public void getRandomNumber_WithoutServer() {
+	public void get_randomnumber_without_server() {
 		RandomizerBean rb= new RandomizerBean();
 		int rn= rb.getRandomNumber();
 		assertEquals(-1,rn);

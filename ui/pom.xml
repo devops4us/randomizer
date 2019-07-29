@@ -51,6 +51,57 @@
 		</dependency>
 	</dependencies>
 	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.tomee.maven</groupId>
+				<artifactId>tomee-maven-plugin</artifactId>
+				<version>${tomee.version}</version>
+				<configuration>
+					<tomeeClassifier>webprofile</tomeeClassifier>
+					<context>randomizer-ui</context>
+				</configuration>
+			</plugin>
+		
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<id>package</id>
+						<phase>package</phase>
+						<configuration>
+							<target>
+								<echo message="about to copy war file ..." />
+								<copy file="target/randomizer-ui-PROJ_VERSION.war"
+									tofile="../Docker/ui/randomizer-ui.war" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+					<execution>
+							<id>post-integration-test</id>
+							<phase>post-integration-test</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+									<echo message="about to run docker-compose down ..." />
+									<exec executable="docker-compose" dir="../Docker">
+										<arg value="down" />
+									</exec>
+								</target>
+							</configuration>
+						</execution>
+				</executions>
+				</plugin>
+		</plugins>
+	</build>
+	
 	<profiles>
 		<profile>
 			<activation>
@@ -66,21 +117,7 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-antrun-plugin</artifactId>
 					<version>1.8</version>
-					<executions>
-						<execution>
-							<id>package</id>
-							<phase>package</phase>
-							<configuration>
-								<target>
-									<echo message="about to copy war file ..." />
-									<copy file="target/randomizer-ui-PROJ_VERSION.war"
-										tofile="../Docker/ui/randomizer-ui.war" />
-								</target>
-							</configuration>
-							<goals>
-								<goal>run</goal>
-							</goals>
-						</execution>
+					<executions>						
 						<execution>
 							<id>pre-integration-test</id>
 							<phase>pre-integration-test</phase>
@@ -101,22 +138,7 @@
 								</target>
 							</configuration>
 						</execution>
-						<execution>
-							<id>post-integration-test</id>
-							<phase>post-integration-test</phase>
-							<goals>
-								<goal>run</goal>
-							</goals>
-							<configuration>
-								<target>
-									<echo message="about to run docker-compose down ..." />
-									<exec executable="docker-compose" dir="../Docker">
-										<arg value="down" />
-									</exec>
-								</target>
-							</configuration>
-						</execution>
-					</executions>
+				</executions>
 				</plugin>
 
 				<plugin>
@@ -129,6 +151,8 @@
 								<systemPropertyVariables>
 									<RANDOMIZER_UI_NAME>${RANDOMIZER_UI_NAME}</RANDOMIZER_UI_NAME>
 									<RANDOMIZER_UI_PORT>${RANDOMIZER_UI_PORT}</RANDOMIZER_UI_PORT>
+									<RANDOMIZER_SERVER_NAME>${RANDOMIZER_SERVER_NAME}</RANDOMIZER_SERVER_NAME>
+									<RANDOMIZER_SERVICE_PORT>${RANDOMIZER_SERVICE_PORT}</RANDOMIZER_SERVICE_PORT>
 								</systemPropertyVariables>
 							</configuration>
 							<goals>
@@ -143,19 +167,5 @@
 			</build>
 		</profile>
 	</profiles>
-	
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.tomee.maven</groupId>
-				<artifactId>tomee-maven-plugin</artifactId>
-				<version>${tomee.version}</version>
-				<configuration>
-					<tomeeClassifier>webprofile</tomeeClassifier>
-					<context>randomizer-ui</context>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 </project>
