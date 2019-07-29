@@ -19,8 +19,9 @@
           <execution>
             <phase>package</phase>
             <configuration>
-              <target unless="maven.test.skip">
-                <copy file="target/randomizer-service-PROJ_VERSION.war" tofile="../Docker/service/randomizer-service.war"/>
+              <target>
+                <copy file="target/randomizer-service-PROJ_VERSION.war" 
+                   tofile="../Docker/service/randomizer-service.war"/>
               </target>
             </configuration>
             <goals>
@@ -42,4 +43,5 @@
      
     </plugins>
    </build>
+   
 </project>

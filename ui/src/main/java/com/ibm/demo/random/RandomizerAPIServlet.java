@@ -1,4 +1,4 @@
-package com.ibm.demo.cdi;
+package com.ibm.demo.random;
 
 import java.io.IOException;
 
@@ -13,21 +13,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @WebServlet("/random")
-public class RandomizerAPI extends HttpServlet {
+public class RandomizerAPIServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-	private static Logger logger= LoggerFactory.getLogger(RandomizerAPI.class);
-	@Inject @Dependent RandomizerBean randomizerBean;
+	private static Logger logger= LoggerFactory.getLogger(RandomizerAPIServlet.class);
+	@Inject @Dependent RandomizerService randomizerService;
 	
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response) {
 		if(logger.isInfoEnabled()) logger.info("/random invoked");
 		try {
-			response.getWriter().print(randomizerBean.getRandomNumber());
+			response.getWriter().print(randomizerService.getRandomNumber());
 		} catch (IOException e) {
-			logger.error("error with randomizerBean", e);
+			logger.error("error with randomizerService", e);
 		}
 	}
-	public RandomizerAPI() {
+	public RandomizerAPIServlet() {
 		if(logger.isInfoEnabled())	logger.info("created");
 	}
 }

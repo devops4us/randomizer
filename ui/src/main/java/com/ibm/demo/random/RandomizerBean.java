@@ -1,10 +1,11 @@
-package com.ibm.demo.cdi;
+package com.ibm.demo.random;
 
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Default;
 
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
@@ -13,7 +14,8 @@ import kong.unirest.Unirest;
  * Data provider bean scoped for each user session.
  */
 @ApplicationScoped
-public class RandomizerBean {
+@Default
+public class RandomizerBean implements RandomizerService {
 	private static Logger logger= Logger.getLogger(RandomizerBean.class.getName());
 	public static final String SERVER_NAME_PROPERTY="RANDOMIZER_SERVER_NAME";
 	public static final String SERVER_PORT_PROPERTY="RANDOMIZER_SERVER_PORT";
