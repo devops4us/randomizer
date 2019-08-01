@@ -3,7 +3,7 @@ pipeline {
   stages {    
     stage('integration-test') {
       steps {
-        sh 'su jenkins -c 'mvn '-DPROFILE=integration' '-DRANDOMIZER_UI_NAME=randomizer-ui' '-DRANDOMIZER_UI_PORT=8080' verify''
+        sh "su jenkins -c 'mvn -DPROFILE=integration -DRANDOMIZER_UI_NAME=randomizer-ui -DRANDOMIZER_UI_PORT=8080 verify'"
       }
     }
   }
