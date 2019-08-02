@@ -1,31 +1,119 @@
-### Maven Modules
-The user interface web application is in mvn module ``ui``. 
-The web application with the rest service is mvn module ``service``.
+We will keep the application logic very simplistic as we want to
+concentrate on DevOps: automated build, test and integration locally and
+on Jenkins.
 
-### Architecture
-<img src="pic001.jpg" align="left" width="100%"></img>
-Ui needs to communicate with the rest service. Both are based on docker image `tomee`. 
+Get the basic Tools
+-------------------
 
-### Build & Deploy
-Build and start containers using `docker-compose`: 
-	The ui and service containers are started using docker-compose with file ``Docker/docker-compose-yml``.
-	The containers run in a docker bridge network. The server names are ``randomizer-ui`` and `randomizer-service`.
-	To build the docker containers, type:	
-		
-	cd Docker ; docker-compose build
+Download and install Docker Desktop for Windows from
+<https://docs.docker.com/docker-for-windows/install/>.
 
-To run the containers, type:
+Download and install Maven for Windows from
+<https://maven.apache.org/download.cgi>.
 
-	cd Docker ; docker-compose up
+Get the Application
+-------------------
 
-### End User Test	
-To test the rest service, open your browser on the docker host with `http://10.0.75.1:8080/randomizer-service/random` . To see the user interface, open your browser on docker host with `http://10.0.75.1:8090/randomizer-ui`. 
+Clone the git repository
 
-### Local Integration Test
-The following command lines will package the applications, build and deploy docker images, and run 
-the containers
+ ```
+ cd %homedrive%\\%homepath%\
+ git clone https://github.ibm.com/devops4us/randomizer.git
+ ````
 
-	mvn -DRANDOMIZER_UI_NAME=10.0.75.1 -DRANDOMIZER_UI_PORT=8090 verify
- 
-### Build on Jenkins
-The Jenkins Build will create containers, run integration tests, and finally archive the containers in a registry for deployment.
+A: Test the isolated UI (without Randomizer Service)
+----------------------------------------------------
+
+Execute the following in a DOS shell:
+
+ ```
+cd %homedrive%\\%homepath%\\randomizer\\ui\
+mvn package tomee:run
+ ```
+
+Open this in your favorite browser:
+<http://localhost:8080/randomizer-ui>. If you click "Get Random Number
+from Server", you'll see -1 in the message box below. This is ok,
+because the Randomizer Service is unavailable for now. We are just
+testing the isolated UI.
+
+B: Deploy and Test the integrated Application locally
+-----------------------------------------------------
+
+Execute the following in a DOS shell:
+
+```
+cd %homedrive%\\%homepath%\\randomizer\
+docker-compose up -d
+ ```
+
+Enter this URL in your favorite browser:
+<http://localhost:8080/randomizer-ui>. If you click "Get Random Number
+from Server", a positive number should appear in the message box below..
+If you still see a -1, the Randomizer Service is not functioning.
+
+C: Run Local Integration Test
+-----------------------------
+
+To run the integration tests locally, execute the following in a DOS
+shell:
+
+```
+cd %homedrive%\\%homepath%\\randomizer\
+mvn -DPROFILE=integration -DRANDOMIZER\_UI\_NAME=localhost\^\
+-DRANDOMIZER\_UI\_PORT=9090 verify
+```
+
+D: Run CI Pipeline with dockerized Jenkins 
+-------------------------------------------
+
+Build a customized Jenkins Docker Image
+---------------------------------------
+
+```
+1 from jenkinsci/blueocean\
+2 USER root\
+3 RUN apk add py-pip\
+4 RUN apk add python-dev libffi-dev openssl-dev gcc libc-dev make\
+5 RUN pip install docker-compose\
+6 RUN apk add maven\
+7 RUN adduser jenkins root\
+8 COPY settings.xml /usr/share/java/maven-3/conf
+```
+
+In the Dockerfile above, lines 3-5 install Docker Compose with the aid of
+python. Line 6 installs Maven. In line 7, we add 'jenkins' to the group
+of root users. This is necessary be able to access the docker daemon
+within the Jenkins server. Line 8 copies the customized maven
+configuration to Jenkins (this step is only necessary if you want to
+customize Maven).
+
+The Jenkins Blueocean image is available from Docker Hub:
+<https://hub.docker.com/r/jenkinsci/blueocean/>. Look at this page:
+<https://jenkins.io/doc/> for information on how to generally configure
+Jenkins. For information on how to install Docker Compose on Jenkins
+Blueocean, refer to this URL:
+<https://wiki.alpinelinux.org/wiki/Docker>. For information on how to
+manage users and groups in the Linux Alpine image, see
+<https://stackoverflow.com/questions/49955097/how-do-i-add-a-user-when-im-using-alpine-as-a-base-image>.
+
+The following DOS shell commands create local Docker image
+jenkins-docker based on the above Dockerfile:
+
+cd %homedrive%\\%homepath%\\randomizer\\Jenkins\
+docker image build -t jenkins-docker -f Jenkins-Dockerfile .
+
+To start the image jenkins-docker, run the following in a DOS shell:
+
+```
+docker network create integration\_net
+ docker run\^
+ -u jenkins\^
+ -p 8080:8080 -p 50000:50000\^
+ -v //var/run/docker.sock:/var/run/docker.sock\^
+ -v c:/volumeshare/jenkins\_home:/var/jenkins\_home\^
+ --name jenkins\^
+ --network=\"integration\_net\"\^
+ --rm\^
+ -d\^
+```
