@@ -273,7 +273,7 @@ cd %homedrive%\\%homepath%\git\\randomizer\\Jenkins\
 docker image build -t jenkins-docker -f Jenkins-Dockerfile .
 ```
 
-#Start Jenkins on Docker
+# Start Jenkins on Docker
 
 Within this tutorial, we will use Jenkins as CI server in Docker.
 We deploy everything on Docker Desktop for Windows.
@@ -309,6 +309,22 @@ Build a Pipeline for Continuous Integration with Jenkins
 --------------------------------------------------------
 
 We have almost achieved our final goal: To have a pipeline running for continuous build, integration and integration test of our system.
-If you look carefully to the list of things we identified in [](#start-jenkins-on-docker), we already executed each of the steps locally.
+If you look carefully to the list of things we identified in [the last chapter](#start-jenkins-on-docker), we already executed each of the steps locally.
+So we have to let Jenkins run them in a pipeline. 
+It is good luck that Jenkins supports Pipeline scripts, so we can specify our pipeline in this script file (`.\Jenkins\Jenkinsfile`):
+
+``` javascript
+1 pipeline {
+2  agent any
+3  stages {    
+4    stage('integration-test') {
+5      steps {
+6        sh "whoami"
+7        sh "mvn -DPROFILE=integration -DRANDOMIZER_UI_NAME=randomizer-ui -DRANDOMIZER_UI_PORT=8080 verify"
+8      }
+9     }
+10  }
+11 }
+```
 
 
