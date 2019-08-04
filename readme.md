@@ -151,58 +151,58 @@ The configuration can be viewed in file `.\ui\pom.xml` (the integration test cas
 In the POM-file, you can see that we configure a Maven profile named `integration-test` in which we do all the integration test preparation and execution. 
 
 ``` xml
-69	<profiles>
-70		<profile>
-71			<activation>
-72				<property>
-73					<name>PROFILE</name>
-74					<value>integration</value>
-75				</property>
-76			</activation>
-77			<id>integration</id>
-78			<build>
-79			<plugins>
-80				<plugin>
-81					<groupId>org.apache.maven.plugins</groupId>
-82					<artifactId>maven-antrun-plugin</artifactId>
-83					<version>1.8</version>
-84					<executions>	
-85						<execution>
-86							<id>package</id>
-87							<phase>package</phase>
-88							<configuration>
-89								<target><copy file="target/randomizer-ui-PROJ_VERSION.war" tofile="../Docker/ui/randomizer-ui.war" /></target>
-90							</configuration>
-91							<goals>	<goal>run</goal></goals>
-92						</execution>					
-93						<execution>
-94							<id>pre-integration-test</id>
-95							<phase>pre-integration-test</phase>
-96							<goals>	<goal>run</goal> </goals>
-97							<configuration>
-98								<target>
-99									<exec executable="docker-compose" dir="../Docker"><arg value="build" />	</exec>
-100									<exec executable="docker-compose" dir="../Docker">
-101										<arg value="up" />
-102									<arg value="-d" />
-103								</exec>
-104								</target>
-105							</configuration>
-106						</execution>
-107						<execution>
-108							<id>post-integration-test</id>
-109							<phase>post-integration-test</phase>
-110							<goals>	<goal>run</goal></goals>
-111							<configuration>
-112								<target>
-113									<exec executable="docker-compose" dir="../Docker"><arg value="down" /> </exec>
-114								</target>
-115							</configuration>
-116						</execution>
-117					</executions>
-118				</plugin>
-...
-``` 
+69   <profiles>
+70       <profile>
+71         <activation>
+72            <property>
+73              <name>PROFILE</name>
+74              <value>integration</value>
+75            </property>
+76         </activation>
+77         <id>integration</id>
+78         <build>
+79         <plugins>
+80            <plugin>
+81               <groupId>org.apache.maven.plugins</groupId>
+82               <artifactId>maven-antrun-plugin</artifactId>
+83               <version>1.8</version>
+84               <executions>   
+85                  <execution>
+86                     <id>package</id>
+87                     <phase>package</phase>
+88                     <configuration>
+89                        <target><copy file="target/randomizer-ui-PROJ_VERSION.war" tofile="../Docker/ui/randomizer-ui.war" /></target>
+90                     </configuration>
+91                     <goals>   <goal>run</goal></goals>
+92                  </execution>               
+93                  <execution>
+94                     <id>pre-integration-test</id>
+95                     <phase>pre-integration-test</phase>
+96                     <goals>   <goal>run</goal> </goals>
+97                     <configuration>
+98                        <target>
+99                           <exec executable="docker-compose" dir="../Docker"><arg value="build" />   </exec>
+100                           <exec executable="docker-compose" dir="../Docker">
+101                              <arg value="up" />
+102                           <arg value="-d" />
+103                        </exec>
+104                        </target>
+105                     </configuration>
+106                 </execution>
+107                 <execution>
+108                     <id>post-integration-test</id>
+109                     <phase>post-integration-test</phase>
+110                     <goals>   <goal>run</goal></goals>
+111                     <configuration>
+112                        <target>
+113                           <exec executable="docker-compose" dir="../Docker"><arg value="down" /> </exec>
+114                        </target>
+115                     </configuration>
+116                 </execution>
+117               </executions>
+118            </plugin>
+                ...
+```
 
 The test preparation includes building the server images and starting the containers with `docker-compose` in lines 93-106.
 We use the Maven Antrun Plugin to execute the necessary `docker-compose` commands in the Maven `pre-integration-test` phase. 
