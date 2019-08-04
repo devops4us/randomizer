@@ -45,7 +45,7 @@ In our UI application, in class `RandomizerBean`, if the service is not availabl
 
 To run to UI service in isolation, execute the following in a DOS shell:
 
- ```
+ ``` bash
 cd %homedrive%\%homepath%\git\randomizer\ui\
 mvn package tomee:run
  ```
@@ -67,7 +67,12 @@ Now we enter the Docker world.
 A *Dockerfile* is used to define a docker image.
 Let's take a look at file `.\Docker\ui\Dockerfile`.
 
-![`.\Docker\ui\Dockerfile`](pictures/pic003.jpg) 
+```
+1 FROM tomee:latest
+2 COPY tomcat-users.xml /usr/local/tomee/conf
+3 COPY manager-context.xml /usr/local/tomee/webapps/manager/META-INF/context.xml
+4 COPY randomizer-ui.war /usr/local/tomee/webapps/
+```
 
 Line 1 defines the base image, which is a dockerized TomEE.
 Lines 2-3 configure the Tomcat Manager application to accept user/password `admin/admin` so we can access Tomcat Manager from the browser.
@@ -82,7 +87,33 @@ Note that beyond what is shown this tutorial, Docker Compose can be used to simp
 
 Let's have a look to the Compose file for our application, `.\Docker\docker-compose.yml`:
 
-<img src="pictures/pic002.jpg"/>
+``` yaml
+version: "3"
+services:
+   randomizer-service:
+      networks:
+      - default    
+      hostname: randomizer-service
+      ports:
+      - "9080:8080" 
+      build: ./service 
+      image: randomizer-service            
+   randomizer-ui:
+      networks:
+      - default
+      hostname: randomizer-ui
+      ports:
+      - "9090:8080"
+      build: ./ui
+      image: randomizer-ui
+      environment:
+      - RANDOMIZER_SERVER_NAME=randomizer-service
+      - RANDOMIZER_SERVICE_PORT=8080
+networks:
+   default:
+      external: 
+        name: integration_net
+```
 
 Note that for each service, we define some networking parameters like networks (lines 4, 12), host name (lines 6, 1) and port mappings (lines 7-8, 15-16). 
 As we do so, each service is accessible from within the Docker network by the defined host name and from outside by the defined ports.
