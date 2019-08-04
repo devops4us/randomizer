@@ -86,29 +86,17 @@
 							<id>package</id>
 							<phase>package</phase>
 							<configuration>
-								<target>
-									<echo message="about to copy war file ..." />
-									<copy file="target/randomizer-ui-PROJ_VERSION.war"
-										tofile="../Docker/ui/randomizer-ui.war" />
-								</target>
+								<target><copy file="target/randomizer-ui-PROJ_VERSION.war" tofile="../Docker/ui/randomizer-ui.war" /></target>
 							</configuration>
-							<goals>
-								<goal>run</goal>
-							</goals>
+							<goals>	<goal>run</goal></goals>
 						</execution>					
 						<execution>
 							<id>pre-integration-test</id>
 							<phase>pre-integration-test</phase>
-							<goals>
-								<goal>run</goal>
-							</goals>
+							<goals>	<goal>run</goal> </goals>
 							<configuration>
 								<target>
-									<echo message="about to run docker-compose build ..." />
-									<exec executable="docker-compose" dir="../Docker">
-										<arg value="build" />
-									</exec>
-									<echo message="about to run docker-compose up ..." />
+									<exec executable="docker-compose" dir="../Docker"><arg value="build" />	</exec>
 									<exec executable="docker-compose" dir="../Docker">
 										<arg value="up" />
 										<arg value="-d" />
@@ -119,21 +107,15 @@
 						<execution>
 							<id>post-integration-test</id>
 							<phase>post-integration-test</phase>
-							<goals>
-								<goal>run</goal>
-							</goals>
+							<goals>	<goal>run</goal></goals>
 							<configuration>
 								<target>
-									<echo message="about to run docker-compose down ..." />
-									<exec executable="docker-compose" dir="../Docker">
-										<arg value="down" />
-									</exec>
+									<exec executable="docker-compose" dir="../Docker"><arg value="down" /> </exec>
 								</target>
 							</configuration>
 						</execution>
 					</executions>
 				</plugin>
-
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-failsafe-plugin</artifactId>

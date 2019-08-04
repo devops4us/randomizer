@@ -14,7 +14,7 @@ Get the Application
 Clone the git repository
 
  ```
- cd %homedrive%\%homepath%\
+ cd %homedrive%\%homepath%\git\
  git clone https://github.ibm.com/devops4us/randomizer.git
  ````
 
@@ -22,30 +22,32 @@ The following picture shows the architecture of our simple example application `
 
 <img src="pic001.jpg" width="50%" height="50%"/>
 
-There are two servers in the runtime architecture.
+There are two servers which implement our application as an integrated system.
 `randomizer-ui` is a HTML5 user interface application server based on the Vaadin Framework (<https://vaadin.com/docs/index.html>) and the Apache TomEE platform (<http://tomee.apache.org/apache-tomee.html>).
 The application is accessed from a browser. 
 It demonstrates a simple UI visualising the generation of random numbers.
 The random generator itself is hosted on another server and is accessed from the user interface as HTTP/REST API.
-The `randomizer-ui` application servier calls a rest API from `randomizer-service`, which is a rest service also running on top of TomEE.
+The `randomizer-ui` application server calls `randomizer-service`, which is also running on top of TomEE.
 
 **Development Environment:** The developer can start each server locally on her development machine (Windows 10 Laptop in my case).
 
 **Test Environment:** In order to be globally deployable for integration test, the servers are each packaged as docker images based on the TomeEE docker image (see <https://docs.docker.com/samples/library/tomee/>).
 Each server image runs in a separate docker container. 
+For build and integration, we use Jenkins in a dockerized version. 
+To test the integrated servers, Jenkins calls a rest service from `randomizer-ui` which in turn calls `randomizer-service`. 
 
-Develop UI (without Service) and Service in Isolation
+Develop the Servers in Isolation
 -------------------------------------------------------------------------------------
 
 Server Development often starts with isolated servers being started locally. 
 This is especially true for the user interface server - the user interface can be tested by mocking away the backend services and provide test data.
 For our simplified sample, it is not necessary to mock the `randomizer-service`.
-In our UI application, in class `RandomizerBean`, if the service is not available, the value `-1` is simply generated as random number. 
+In our UI application, in class `RandomizerBean`, if the service is not available, the value `-1` is simply generated as dummy random number. 
 
-To start to UI service in isolation, execute the following in a DOS shell:
+To run to UI service in isolation, execute the following in a DOS shell:
 
  ```
-cd %homedrive%\%homepath%\randomizer\ui\
+cd %homedrive%\%homepath%\git\randomizer\ui\
 mvn package tomee:run
  ```
 
@@ -57,36 +59,105 @@ We are still able to test the isolated UI, even if we get a dummy value instead 
 Note that we called the goal `tomee:run` in the maven command line above. 
 The reason why we can do this is the TomEE Maven Plugin (<http://tomee.apache.org/tomee-maven-plugin.html>). 
 If you include this plugin in your `pom.xml`, as we did, the above command line will start a local TomEE server which hosts just your web application, `randomizer-ui`in our case.
-See the TomEE documentation and the file `randomizer\ui\pom.xml`.    
+See the TomEE documentation and the content of file `randomizer\ui\pom.xml`.    
 
-Deploy and Test the integrated Application locally
+Deploy the integrated Application locally
 -----------------------------------------------------
 
-Execute the following in a DOS shell:
+Now we enter the Docker world. 
+A *Dockerfile* is used to define a docker image.
+Let's take a look at file `.\Docker\ui\Dockerfile`.
+
+<img src="pic003.jpg"/> 
+
+Line 1 defines the base image, which is a dockerized TomEE.
+Lines 2-3 configure the Tomcat Manager application to accept user/password `admin/admin` so we can access Tomcat Manager from the browser.
+Line 4 deploys the application `randomizer-ui` to TomEE as a web application by copying the package `randomizer-ui.war` to TomEE's web application directory.
+The result of building with this Dockerfile is an image ready to be started as Docker container. 
+Look at file `.\Docker\service\Dockerfile` which does the same for `randomizer-service`.   
+
+Instead of starting each docker image manually with the docker command line, we use Docker Compose (<https://docs.docker.com/compose/>). 
+With Compose, you define all the servers - the used images, their volume mappings, port mappings, networks, etc - in a single *Compose file*. 
+They are then started and stopped together using Docker Compose command line.
+Note that beyond what is shown this tutorial, Docker Compose can be used to simplify various other tasks, e.g. access to the log files of all the running containers, see  (<https://docs.docker.com/compose/>).
+
+Let's have a look to the Compose file for our application, `.\Docker\docker-compose.yml`:
+
+<img src="pic002.jpg"/>
+
+Note that for each service, we define some networking parameters like networks (lines 4, 12), host name (lines 6, 1) and port mappings (lines 7-8, 15-16). 
+As we do so, each service is accessible from within the Docker network by the defined host name and from outside by the defined ports.
+The characteristics of the Docker network itself are specified in lines 22-25, saying that our containers are be accessible from the virtual network `integration_net` which has to be defined elsewhere (`external`).
+Background is that the virtual network `integration_net` will be created and managed by the Jenkins build/integration server.  
+
+The services are also accessible from the docker host (Windows 10 desktop in my case) as `localhost:9080` and `localhost:9090`. 
+For instance, the user interface, once started in my local docker, is accessible from my Windows browser at URL `localhost:9090/randomizer-ui`. 
+This is because we defined port mappings which make the docker containers accessible from the docker host machine.
+
+To start all the servers in Docker, Execute the following in a DOS shell:
 
 ```
-cd %homedrive%\%homepath%\randomizer\
+cd %homedrive%\%homepath%\git\randomizer\Docker
+docker network create integration_net
 docker-compose up -d
  ```
 
-Enter this URL in your favorite browser: <http://localhost:8080/randomizer-ui>. 
+Enter this URL in your favorite browser: <http://localhost:9090/randomizer-ui>. 
 If you click "Get Random Number from Server", a positive number should appear in a message box.
 If you still see a -1, the Randomizer Service is not functioning.
+If you want to see the server logs, enter
+
+```
+cd %homedrive%\%homepath%\git\randomizer\Docker
+docker-compose logs
+```
 
 Run Local Integration Test
------------------------------
+----------------------------
+
+As we are able to launch all our servers in a local Docker, we can also run the server integration tests locally. 
+For integration testing, we use the Maven lifecycle phases and the Maven Failsafe Plugin (<http://maven.apache.org/surefire/maven-failsafe-plugin/>).
+The configuration can be viewed in file `.\ui\pom.xml` (the integration test cases are part of the ui project because in our example integration is tested via the ui service).
+In the POM-file, you can see that we configure a Maven profile named `integration-test` in which we do all the integration test preparation and execution. 
+
+<figure>
+<img src="pic004.jpg"/>
+<figcaption><code>.\ui\pom.xml</code></figcaption>
+</figure>
+
+The test preparation includes building the server images and starting the containers with `docker-compose` in lines 93-106.
+We use the Maven Antrun Plugin to execute the necessary `docker-compose` commands in the Maven `pre-integration-test` phase. 
+After the integration test, we need to stop the containers, which is done in lines 107-117. 
 
 To run the integration tests locally, execute the following in a DOS shell:
 
 ```
-cd %homedrive%\%homepath%\randomizer\
-mvn -DPROFILE=integration -DRANDOMIZER_UI_NAME=localhost\^\
--DRANDOMIZER_UI_PORT=9090 verify
+cd %homedrive%\%homepath%\git\git\randomizer\
+mvn -DPROFILE=integration -DRANDOMIZER_UI_NAME=localhost^
+        -DRANDOMIZER_UI_PORT=9090 verify
 ```
 
-Build a customized Jenkins Docker Image
----------------------------------------
-The follofing ist the content of file `Jenkins\Jenkins-Dockerfile`. It is used to build the Jenkins Docker image.
+As we use the Maven Failsafe Plugin, the test classes with a class name ending with `IT` are being run for test in phase `integration-test` by convention. 
+In our case, class `com.ibm.demo.RandomizerIT` is being run. 
+The test results are saved as Failsafe reports in directory `.\ui\target\failsafe-reports\`.
+Note that this is an integration test; we do not test the function of the user interface here. 
+For that reason, `ui-server` provides an endpoint `http://localhost:9090/randomizer-ui/random`, which returns a random number - if the call to this URL succeeds with a positive number, we know that both servers, `randomizer-ui` and `randomizer-service`, are deployed correctly and work with each other.
+The integration test class `com.ibm.demo.RandomizerIT` calls this URL and reports success if a positive number is returned.
+
+
+Build a Jenkins Docker Image 
+-------------------------------------  
+
+Now we enter the world of Continuous Integration servers, Jenkins in our case.
+This means that for our whole development project, we will build the components periodically from the source repository, deploy them in a test environment, and test if they work together correctly.
+* Jenkins can automatically build, deploy and test the integrated servers. 
+This can be done on each change in the main branch or periodically.
+This is why may call the process *contiuous integration*.
+* Each integration test run is recorded by Jenkins and available for review with all the test results via the Jenkins user interface
+* The integration test servers are started and stopped with Docker Compose as needed and on demand - no integration test environment is allocated permanently  
+
+
+The following ist the content of file `Jenkins\Jenkins-Dockerfile`. It is used to build the Jenkins Docker image.
 
 ```
 1 from jenkinsci/blueocean
@@ -114,7 +185,7 @@ The following DOS shell commands create local Docker image
 jenkins-docker based on the above Dockerfile:
 
 ```
-cd %homedrive%\\%homepath%\\randomizer\\Jenkins\
+cd %homedrive%\\%homepath%\git\\randomizer\\Jenkins\
 docker image build -t jenkins-docker -f Jenkins-Dockerfile .
 ```
 

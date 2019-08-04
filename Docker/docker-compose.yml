@@ -1,23 +1,21 @@
 version: "3"
 services:
    randomizer-service:
-      hostname: randomizer-service
-      image: tomee
-      build: ./service 
-      image: randomizer-service      
-      ports:
-      - "9080:8080"
       networks:
       - default    
-   randomizer-ui:
-      hostname: randomizer-ui
-      image: tomee
-      build: ./ui
-      image: randomizer-ui
+      hostname: randomizer-service
       ports:
-      - "9090:8080"
+      - "9080:8080" 
+      build: ./service 
+      image: randomizer-service            
+   randomizer-ui:
       networks:
       - default
+      hostname: randomizer-ui
+      ports:
+      - "9090:8080"
+      build: ./ui
+      image: randomizer-ui
       environment:
       - RANDOMIZER_SERVER_NAME=randomizer-service
       - RANDOMIZER_SERVICE_PORT=8080
