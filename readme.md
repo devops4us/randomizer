@@ -19,7 +19,7 @@ Clone the git repository
  ````
 
 The following picture shows the architecture of our simple example application `Randomizer`.
-![Randomizer Architecture](pic001.jpg)
+![Randomizer Architecture](pictures/pic001.jpg)
 
 There are two servers which implement our application as an integrated system.
 `randomizer-ui` is a HTML5 user interface application server based on the Vaadin Framework (<https://vaadin.com/docs/index.html>) and the Apache TomEE platform (<http://tomee.apache.org/apache-tomee.html>).
@@ -67,7 +67,7 @@ Now we enter the Docker world.
 A *Dockerfile* is used to define a docker image.
 Let's take a look at file `.\Docker\ui\Dockerfile`.
 
-![`.\Docker\ui\Dockerfile`](pic003.jpg) 
+![`.\Docker\ui\Dockerfile`](pictures/pic003.jpg) 
 
 Line 1 defines the base image, which is a dockerized TomEE.
 Lines 2-3 configure the Tomcat Manager application to accept user/password `admin/admin` so we can access Tomcat Manager from the browser.
@@ -82,7 +82,7 @@ Note that beyond what is shown this tutorial, Docker Compose can be used to simp
 
 Let's have a look to the Compose file for our application, `.\Docker\docker-compose.yml`:
 
-<img src="pic002.jpg"/>
+<img src="pictures/pic002.jpg"/>
 
 Note that for each service, we define some networking parameters like networks (lines 4, 12), host name (lines 6, 1) and port mappings (lines 7-8, 15-16). 
 As we do so, each service is accessible from within the Docker network by the defined host name and from outside by the defined ports.
@@ -120,9 +120,10 @@ The configuration can be viewed in file `.\ui\pom.xml` (the integration test cas
 In the POM-file, you can see that we configure a Maven profile named `integration-test` in which we do all the integration test preparation and execution. 
 
 <figure>
-<img src="pic004.jpg"/>
+<img src="pictures/pic004.jpg"/>
 <figcaption><code>.\ui\pom.xml</code></figcaption>
 </figure>
+
 
 The test preparation includes building the server images and starting the containers with `docker-compose` in lines 93-106.
 We use the Maven Antrun Plugin to execute the necessary `docker-compose` commands in the Maven `pre-integration-test` phase. 
