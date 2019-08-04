@@ -142,8 +142,7 @@ cd %homedrive%\%homepath%\git\randomizer\Docker
 docker-compose logs
 ```
 
-Run Local Integration Test
-----------------------------
+# Run Local Integration Test
 
 As we are able to launch all our servers in a local Docker, we can also run the server integration tests locally. 
 For integration testing, we use the Maven lifecycle phases and the Maven Failsafe Plugin (<http://maven.apache.org/surefire/maven-failsafe-plugin/>).
@@ -305,15 +304,15 @@ docker run^
  jenkins-docker
 ```
 
-Build a Pipeline for Continuous Integration with Jenkins
+Define and run CI Pipeline on Jenkins
 --------------------------------------------------------
 
 We have almost achieved our final goal: To have a pipeline running for continuous build, integration and integration test of our system.
-If you look carefully to the list of things we identified in [the last chapter](#start-jenkins-on-docker), we already executed each of the steps locally.
+If you look carefully to the list of things we identified in [the previous section](#start-jenkins-on-docker), we already executed each of the steps locally.
 So we have to let Jenkins run them in a pipeline. 
 It is good luck that Jenkins supports Pipeline scripts, so we can specify our pipeline in this script file (`.\Jenkins\Jenkinsfile`):
 
-``` javascript
+``` 
 1 pipeline {
 2  agent any
 3  stages {    
@@ -326,5 +325,24 @@ It is good luck that Jenkins supports Pipeline scripts, so we can specify our pi
 10  }
 11 }
 ```
+ In line 2, we tell jenkins not to start a separte Docker container for our integration pipeline.
+ All the magic is done in step 7, where we start our integration tests just like in section [Run Local Integration Test](#run-local-integration-test).
+ 
+ What we still need to do is define that pipeline within the Jenkins server.
+ As we alreay started Jenkins it the [previous chapter](#start-jenkins-on-docker), just open the URL: <http://localhost:8080> and login with credentials `admin/admin`. 
+ What we see now is the jenkins management user interface. 
+ To define and run our pipeline, we need to click through the following steps:
+ - Jenkins -> Create Element  
+ - Type "Randomizer" as element name  
+ -   Click "Pipeline" 
+-    Click "OK"  
+   - Go to Section "Pipeline"  
+-    Select "Pipeline Script from SCM" in the Definition Field  
+-    Select "Git" in the SCM Field  
+-    Enter "https://github.com/devops4us/randomizer.git" as Repository URL  
+-    Enter "Jenkins/Jenkinsfile" as Script Path
+-    Click "Save"  
+-    Click "Build Now"  
 
+From there on, we have a working Jenkins CI pipeline!
 
