@@ -224,19 +224,24 @@ For that reason, `ui-server` provides an endpoint `http://localhost:9090/randomi
 The integration test class `com.ibm.demo.RandomizerIT` calls this URL and reports success if a positive number is returned.
 
 
-Build a Jenkins Docker Image 
+Enter the CI World
 -------------------------------------  
 
 Now we enter the world of Continuous Integration servers, Jenkins in our case.
 This means that for our whole development project, we will build the components periodically from the source repository, deploy them in a test environment, and test if they work together correctly.
 * Jenkins can automatically build, deploy and test the integrated servers. 
 This can be done on each change in the main branch or periodically.
-This is why may call the process *contiuous integration*.
+This is why may call the process *continuous integration*.
 * Each integration test run is recorded by Jenkins and available for review with all the test results via the Jenkins user interface
 * The integration test servers are started and stopped with Docker Compose as needed and on demand - no integration test environment is allocated permanently  
 
+Build a Jenkins Docker Image
+----------------------------
 
-The following ist the content of file `Jenkins\Jenkins-Dockerfile`. It is used to build the Jenkins Docker image.
+Before we start building a Continuous Integration (CI) pipeline on Jenkins, we need a suitable Docker image. 
+The standard Jenkins Docker image (<https://hub.docker.com/r/jenkinsci/jenkins>) lacks Docker Compose and Maven, which we need.
+So we customize our Jenkins Docker image using a custom Dockerfile.  The following ist the content of file `Jenkins\Jenkins-Dockerfile`. It is used to build our customized Jenkins Docker image.
+
 
 ```
 1 from jenkinsci/blueocean
@@ -268,11 +273,27 @@ cd %homedrive%\\%homepath%\git\\randomizer\\Jenkins\
 docker image build -t jenkins-docker -f Jenkins-Dockerfile .
 ```
 
-To start jenkins from the image the image `jenkins` image, run the following in a DOS shell:
+#Start Jenkins on Docker
+
+Within this tutorial, we will use Jenkins as CI server in Docker.
+We deploy everything on Docker Desktop for Windows.
+But before we deploy Jenkins, we need to consider what will happen in our Jenkins CI server - we will define a CI pipeline in Jenkins which executes the following:
+2. Checkout our Code from Git
+3. Build the Docker images for `randomizer-ui`and `randomizer-service`
+4. Run the Docker images on our local Docker
+5. Execute the integration tests and collect reports
+6. Stop the Docker images
+
+To run the Docker images in step 4, Jenkins has to communicate with our Docker Desktop for Windows. 
+We could, theoretically, start a separate Docker host in the Jenkins Docker container, so that we had a *Docker-In-Docker* configuration, but this is not regared as a good practice (<https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/>).
+The alternative is, as said, to let the Jenkins Docker container talk to the Docker daemon on windows, which is achieved by defining the *Docker socket* as a shared volume. 
+This is configured during the start of the Jenkins container, see the DOS shell script below, where it says `"-v //var/run/docker.sock:/var/run/docker.sock"`. 
+  
+To start jenkins as Docker container from the image `jenkins` created above, run the following in a DOS shell:
 
 ```
 docker network create integration_net
- docker run^
+docker run^
  -u jenkins^
  -p 8080:8080 -p 50000:50000\^
  -v //var/run/docker.sock:/var/run/docker.sock^
@@ -283,3 +304,11 @@ docker network create integration_net
  -d^
  jenkins-docker
 ```
+
+Build a Pipeline for Continuous Integration with Jenkins
+--------------------------------------------------------
+
+We have almost achieved our final goal: To have a pipeline running for continuous build, integration and integration test of our system.
+If you look carefully to the list of things we identified in [](#start-jenkins-on-docker), we already executed each of the steps locally.
+
+
