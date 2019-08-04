@@ -19,8 +19,7 @@ Clone the git repository
  ````
 
 The following picture shows the architecture of our simple example application `Randomizer`.
-
-<img src="pic001.jpg" width="50%" height="50%"/>
+![Randomizer Architecture](pic001.jpg)
 
 There are two servers which implement our application as an integrated system.
 `randomizer-ui` is a HTML5 user interface application server based on the Vaadin Framework (<https://vaadin.com/docs/index.html>) and the Apache TomEE platform (<http://tomee.apache.org/apache-tomee.html>).
@@ -68,7 +67,7 @@ Now we enter the Docker world.
 A *Dockerfile* is used to define a docker image.
 Let's take a look at file `.\Docker\ui\Dockerfile`.
 
-<img src="pic003.jpg"/> 
+![`.\Docker\ui\Dockerfile`](pic003.jpg) 
 
 Line 1 defines the base image, which is a dockerized TomEE.
 Lines 2-3 configure the Tomcat Manager application to accept user/password `admin/admin` so we can access Tomcat Manager from the browser.
