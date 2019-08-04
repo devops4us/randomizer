@@ -88,31 +88,31 @@ Note that beyond what is shown this tutorial, Docker Compose can be used to simp
 Let's have a look to the Compose file for our application, `.\Docker\docker-compose.yml`:
 
 ``` yaml
-version: "3"
-services:
-   randomizer-service:
-      networks:
-      - default    
-      hostname: randomizer-service
-      ports:
-      - "9080:8080" 
-      build: ./service 
-      image: randomizer-service            
-   randomizer-ui:
-      networks:
-      - default
-      hostname: randomizer-ui
-      ports:
-      - "9090:8080"
-      build: ./ui
-      image: randomizer-ui
-      environment:
-      - RANDOMIZER_SERVER_NAME=randomizer-service
-      - RANDOMIZER_SERVICE_PORT=8080
-networks:
-   default:
-      external: 
-        name: integration_net
+1 version: "3"
+2 services:
+3   randomizer-service:
+4      networks:
+5      - default    
+6      hostname: randomizer-service
+7      ports:
+8      - "9080:8080" 
+9      build: ./service 
+10     image: randomizer-service            
+11  randomizer-ui:
+12    networks:
+13    - default
+14    hostname: randomizer-ui
+15    ports:
+16    - "9090:8080"
+17    build: ./ui
+18    image: randomizer-ui
+19    environment:
+20    - RANDOMIZER_SERVER_NAME=randomizer-service
+21    - RANDOMIZER_SERVICE_PORT=8080
+22 networks:
+23   default:
+24      external: 
+25        name: integration_net
 ```
 
 Note that for each service, we define some networking parameters like networks (lines 4, 12), host name (lines 6, 1) and port mappings (lines 7-8, 15-16). 
