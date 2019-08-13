@@ -1,4 +1,7 @@
-We will keep the application logic very simplistic as we want to concentrate on DevOps: automated build, test and integration locally and
+#Tutorial: Continuous Build, Test and Integration on Jenkins
+
+This is a tutorial for the automated build, deploy, and integration test of a composite application in a Continuous Integration Pipeline on Jenkins. 
+We keep the application logic very simplistic as we want to concentrate on DevOps: automated build, test and integration locally and
 on Jenkins.
 
 Get the basic Tools
@@ -39,8 +42,7 @@ Develop the Servers in Isolation
 -------------------------------------------------------------------------------------
 
 Server Development often starts with isolated servers being started locally. 
-This is especially true for the user interface server - the user interface can be tested by mocking away the backend services and provide test data.
-For our simplified sample, it is not necessary to mock the `randomizer-service`.
+This is especially true for the user interface server - the user interface can be tested by mocking away the backend services.
 In our UI application, in class `RandomizerBean`, if the service is not available, the value `-1` is simply generated as dummy random number. 
 
 To run to UI service in isolation, execute the following in a DOS shell:
@@ -65,7 +67,7 @@ Deploy the integrated Application locally
 
 Now we enter the Docker world. 
 A *Dockerfile* is used to define a docker image.
-Let's take a look at file `.\Docker\ui\Dockerfile`.
+Let's take a look at file `.\Docker\ui\Dockerfile`, which is the Dockerfile defining the `randomizer-ui` web application container.
 
 ```
 1 FROM tomee:latest
@@ -77,13 +79,13 @@ Let's take a look at file `.\Docker\ui\Dockerfile`.
 Line 1 defines the base image, which is a dockerized TomEE.
 Lines 2-3 configure the Tomcat Manager application to accept user/password `admin/admin` so we can access Tomcat Manager from the browser.
 Line 4 deploys the application `randomizer-ui` to TomEE as a web application by copying the package `randomizer-ui.war` to TomEE's web application directory.
-The result of building with this Dockerfile is an image ready to be started as Docker container. 
+The result of building with this Dockerfile is an image for `randomizer-ui`, based on TomEE, and ready to be started as Docker container. 
 Look at file `.\Docker\service\Dockerfile` which does the same for `randomizer-service`.   
 
 Instead of starting each docker image manually with the docker command line, we use Docker Compose (<https://docs.docker.com/compose/>). 
 With Compose, you define all the servers - the used images, their volume mappings, port mappings, networks, etc - in a single *Compose file*. 
 They are then started and stopped together using Docker Compose command line.
-Note that beyond what is shown this tutorial, Docker Compose can be used to simplify various other tasks, e.g. access to the log files of all the running containers, see  (<https://docs.docker.com/compose/>).
+Note that beyond what is shown in this tutorial, Docker Compose can be used to simplify various other tasks, e.g. access to the log files of all the running containers, see  (<https://docs.docker.com/compose/>).
 
 Let's have a look to the Compose file for our application, `.\Docker\docker-compose.yml`:
 
@@ -116,7 +118,7 @@ Let's have a look to the Compose file for our application, `.\Docker\docker-comp
 ```
 
 Note that for each service, we define some networking parameters like networks (lines 4, 12), host name (lines 6, 1) and port mappings (lines 7-8, 15-16). 
-As we do so, each service is accessible from within the Docker network by the defined host name and from outside by the defined ports.
+As we do so, each service is accessible from within the Docker network by the defined host name and from outside by the defined port.
 The characteristics of the Docker network itself are specified in lines 22-25, saying that our containers are be accessible from the virtual network `integration_net` which has to be defined elsewhere (`external`).
 Background is that the virtual network `integration_net` will be created and managed by the Jenkins build/integration server.  
 
@@ -147,7 +149,7 @@ docker-compose logs
 As we are able to launch all our servers in a local Docker, we can also run the server integration tests locally. 
 For integration testing, we use the Maven lifecycle phases and the Maven Failsafe Plugin (<http://maven.apache.org/surefire/maven-failsafe-plugin/>).
 The configuration can be viewed in file `.\ui\pom.xml` (the integration test cases are part of the ui project because in our example integration is tested via the ui service).
-In the POM-file, you can see that we configure a Maven profile named `integration-test` in which we do all the integration test preparation and execution. 
+In the POM-file, you can see that we configure a Maven profile named `integration` in which we do all the integration test preparation and execution. 
 
 ``` xml
 69   <profiles>
@@ -230,7 +232,7 @@ Now we enter the world of Continuous Integration servers, Jenkins in our case.
 This means that for our whole development project, we will build the components periodically from the source repository, deploy them in a test environment, and test if they work together correctly.
 * Jenkins can automatically build, deploy and test the integrated servers. 
 This can be done on each change in the main branch or periodically.
-This is why may call the process *continuous integration*.
+This is why we call the process *continuous integration*.
 * Each integration test run is recorded by Jenkins and available for review with all the test results via the Jenkins user interface
 * The integration test servers are started and stopped with Docker Compose as needed and on demand - no integration test environment is allocated permanently  
 
@@ -256,16 +258,15 @@ So we customize our Jenkins Docker image using a custom Dockerfile.  The followi
 Lines 3-5 install Docker Compose with the aid of python. 
 Line 6 installs Maven. 
 In line 7, we add 'jenkins' to the group of root users. 
-This is necessary be able to access the docker daemon within the Jenkins server. 
-Line 8 copies the customized maven configuration to Jenkins (this step is only necessary if you want to customize Maven).
+This is necessary to be able to access the docker daemon within the Jenkins server. 
+Line 8 copies the maven configuration (this step is not necessary here; but later you can use it to customize the Maven settings if needed).
 
 The Jenkins Blueocean image is available from Docker Hub: <https://hub.docker.com/r/jenkinsci/blueocean/>. 
 Look at this page: <https://jenkins.io/doc/> for information on how to generally configure Jenkins. 
 For information on how to install Docker Compose on Jenkins Blueocean, refer to this URL: <https://wiki.alpinelinux.org/wiki/Docker>. 
 For information on how to manage users and groups in the Linux Alpine image, see <https://stackoverflow.com/questions/49955097/how-do-i-add-a-user-when-im-using-alpine-as-a-base-image>.
 
-The following DOS shell commands create local Docker image
-jenkins-docker based on the above Dockerfile:
+The following DOS shell commands create local Docker image based on the above Dockerfile:
 
 ```
 cd %homedrive%\\%homepath%\git\\randomizer\\Jenkins\
@@ -277,15 +278,16 @@ docker image build -t jenkins-docker -f Jenkins-Dockerfile .
 Within this tutorial, we will use Jenkins as CI server in Docker.
 We deploy everything on Docker Desktop for Windows.
 But before we deploy Jenkins, we need to consider what will happen in our Jenkins CI server - we will define a CI pipeline in Jenkins which executes the following:
+
 2. Checkout our Code from Git
 3. Build the Docker images for `randomizer-ui`and `randomizer-service`
 4. Run the Docker images on our local Docker
 5. Execute the integration tests and collect reports
 6. Stop the Docker images
 
-To run the Docker images in step 4, Jenkins has to communicate with our Docker Desktop for Windows. 
+To run the Docker images in step 3, Jenkins has to start Docker containers from within Docker, as it runs in a Docker container for itself.  
 We could, theoretically, start a separate Docker host in the Jenkins Docker container, so that we had a *Docker-In-Docker* configuration, but this is not regared as a good practice (<https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/>).
-The alternative is, as said, to let the Jenkins Docker container talk to the Docker daemon on windows, which is achieved by defining the *Docker socket* as a shared volume. 
+The alternative is, to let the Jenkins Docker command line talk to the Docker daemon on the host (Windows 10 in my case), which is achieved by defining the *Docker socket* as a shared volume. 
 This is configured during the start of the Jenkins container, see the DOS shell script below, where it says `"-v //var/run/docker.sock:/var/run/docker.sock"`. 
   
 To start jenkins as Docker container from the image `jenkins` created above, run the following in a DOS shell:
@@ -304,11 +306,11 @@ docker run^
  jenkins-docker
 ```
 
-Define and run CI Pipeline on Jenkins
+Install the CI Pipeline on Jenkins
 --------------------------------------------------------
 
 We have almost achieved our final goal: To have a pipeline running for continuous build, integration and integration test of our system.
-If you look carefully to the list of things we identified in [the previous section](#start-jenkins-on-docker), we already executed each of the steps locally.
+If you look carefully to the list of things we identified in [the previous section](#start-jenkins-on-docker), we already executed each of the steps without Jenkins.
 So we have to let Jenkins run them in a pipeline. 
 It is good luck that Jenkins supports Pipeline scripts, so we can specify our pipeline in this script file (`.\Jenkins\Jenkinsfile`):
 
@@ -325,24 +327,24 @@ It is good luck that Jenkins supports Pipeline scripts, so we can specify our pi
 10  }
 11 }
 ```
- In line 2, we tell jenkins not to start a separte Docker container for our integration pipeline.
- All the magic is done in step 7, where we start our integration tests just like in section [Run Local Integration Test](#run-local-integration-test).
+In line 2, we tell Jenkins to run that pipeline within the Jenkins Docker container.
+All the magic is done in step 7, where we start our integration tests just like in section [Run Local Integration Test](#run-local-integration-test).
  
- What we still need to do is define that pipeline within the Jenkins server.
- As we alreay started Jenkins it the [previous chapter](#start-jenkins-on-docker), just open the URL: <http://localhost:8080> and login with credentials `admin/admin`. 
- What we see now is the jenkins management user interface. 
- To define and run our pipeline, we need to click through the following steps:
- - Jenkins -> Create Element  
- - Type "Randomizer" as element name  
- -   Click "Pipeline" 
--    Click "OK"  
-   - Go to Section "Pipeline"  
--    Select "Pipeline Script from SCM" in the Definition Field  
--    Select "Git" in the SCM Field  
--    Enter "https://github.com/devops4us/randomizer.git" as Repository URL  
--    Enter "Jenkins/Jenkinsfile" as Script Path
--    Click "Save"  
--    Click "Build Now"  
+What we still need to do is to install that pipeline on the Jenkins server.
+As we alreay started Jenkins it the [previous chapter](#start-jenkins-on-docker), just open the URL: <http://localhost:8080> and login with credentials `admin/admin`. 
+What we see now is the jenkins management user interface. 
+To define and run our pipeline, we need to click through the following steps:
+1. Jenkins -> Create Element  
+1. Type "Randomizer" as element name  
+1.   Click "Pipeline" 
+1.    Click "OK"  
+1. Go to Section "Pipeline"  
+1.   Select "Pipeline Script from SCM" in the Definition Field  
+1.   Select "Git" in the SCM Field  
+1.   Enter "https://github.com/devops4us/randomizer.git" as Repository URL  
+1.   Enter "Jenkins/Jenkinsfile" as Script Path
+1.   Click "Save"  
+1.   Click "Build Now"  
 
 From there on, we have a working Jenkins CI pipeline!
 
