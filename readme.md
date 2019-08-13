@@ -1,4 +1,5 @@
 #Tutorial: Continuous Build, Test and Integration on Jenkins
+-----------------------------------------------------------
 
 This is a tutorial for the automated build, deploy, and integration test of a composite application in a Continuous Integration Pipeline on Jenkins. 
 We keep the application logic very simplistic as we want to concentrate on DevOps: automated build, test and integration locally and
@@ -144,7 +145,8 @@ cd %homedrive%\%homepath%\git\randomizer\Docker
 docker-compose logs
 ```
 
-# Run Local Integration Test
+Run Local Integration Test
+---------------------------
 
 As we are able to launch all our servers in a local Docker, we can also run the server integration tests locally. 
 For integration testing, we use the Maven lifecycle phases and the Maven Failsafe Plugin (<http://maven.apache.org/surefire/maven-failsafe-plugin/>).
@@ -273,7 +275,8 @@ cd %homedrive%\\%homepath%\git\\randomizer\\Jenkins\
 docker image build -t jenkins-docker -f Jenkins-Dockerfile .
 ```
 
-# Start Jenkins on Docker
+Start Jenkins on Docker
+-----------------------
 
 Within this tutorial, we will use Jenkins as CI server in Docker.
 We deploy everything on Docker Desktop for Windows.
